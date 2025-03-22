@@ -1,4 +1,4 @@
-name: CI Build
+name: Build 3.12
 on: workflow_dispatch
 jobs:
   build:
@@ -15,3 +15,6 @@ jobs:
           name: Windows whl
           path: fairseq-*.whl
           if-no-files-found: error
+
+
+
