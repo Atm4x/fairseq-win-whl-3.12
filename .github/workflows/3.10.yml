@@ -1,0 +1,17 @@
+name: Build 3.10
+on: workflow_dispatch
+jobs:
+  build:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: pip wheel "fairseq @ git+https://github.com/One-sixth/fairseq.git"
+        continue-on-error: true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Windows whl
+          path: fairseq-*.whl
+          if-no-files-found: error
