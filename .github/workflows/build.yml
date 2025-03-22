@@ -10,7 +10,7 @@ jobs:
           python-version: '3.12'
       - run: pip wheel "fairseq @ git+https://github.com/One-sixth/fairseq.git"
         continue-on-error: true
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Windows whl
           path: fairseq-*.whl
