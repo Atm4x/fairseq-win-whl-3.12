@@ -13,7 +13,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Windows whl
-          path: fairseq-*.whl
+          path: fairseq-built*.whl
           if-no-files-found: error
 
 
