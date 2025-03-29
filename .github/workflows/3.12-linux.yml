@@ -8,10 +8,10 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.12'
-      - run: pip wheel "fairseq @ git+https://github.com/One-sixth/fairseq.git"
+      - run: pip wheel "fairseq-built @ git+https://github.com/Atm4x/fairseq-built.git"
         continue-on-error: true
       - uses: actions/upload-artifact@v4
         with:
           name: Linux whl
-          path: fairseq-*.whl
+          path: fairseq_built-*.whl
           if-no-files-found: error
