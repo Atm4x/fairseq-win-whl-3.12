@@ -1,17 +1,37 @@
-name: Build 3.11 linux
+name: Build fairseq-built Linux manylinux Wheels (Python 3.12)
+
 on: workflow_dispatch
+
 jobs:
-  build:
-    name: Build Linux
+  build_linux_wheels:
+    name: Build Linux manylinux wheels (cp312)
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/setup-python@v4
+      - name: Check out fairseq-built source code
+        uses: actions/checkout@v4
+        with:
+          repository: Atm4x/fairseq-built
+          # ref: main # Consider uncommenting and setting a specific ref
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      - run: pip wheel "fairseq-built @ git+https://github.com/Atm4x/fairseq-built.git"
-        continue-on-error: true
-      - uses: actions/upload-artifact@v4
+
+      - name: Install cibuildwheel
+        run: pip install cibuildwheel
+
+      - name: Build wheels using cibuildwheel
+        run: cibuildwheel --platform linux .
+        env:
+          CIBW_BUILD: cp312-manylinux_x86_64
+          # Optional: Add CIBW_BEFORE_BUILD_LINUX if needed
+          # CIBW_BEFORE_BUILD_LINUX: yum install -y some-devel-package
+
+      - name: Upload wheels as artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: Linux whl
-          path: fairseq_built-*.whl
+          name: Linux-manylinux-wheels-cp312
+          path: ./wheelhouse/fairseq_built*cp312*manylinux*.whl
           if-no-files-found: error
