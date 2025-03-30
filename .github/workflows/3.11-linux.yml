@@ -25,7 +25,7 @@ jobs:
       - name: Build wheels using cibuildwheel
         run: cibuildwheel --platform linux .
         env:
-          CIBW_BUILD: cp312-manylinux_x86_64
+          CIBW_BUILD: cp311-manylinux_x86_64
           # Install PyTorch BEFORE the build starts inside the container
           # This makes libtorch.so available for auditwheel's analysis
           # Use {pip} as recommended by cibuildwheel docs
