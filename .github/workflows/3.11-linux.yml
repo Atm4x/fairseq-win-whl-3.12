@@ -25,18 +25,19 @@ jobs:
       - name: Build wheels using cibuildwheel
         run: cibuildwheel --platform linux .
         env:
+          # Target Python 3.11 build
           CIBW_BUILD: cp311-manylinux_x86_64
-          # Install PyTorch BEFORE the build starts inside the container
-          # This makes libtorch.so available for auditwheel's analysis
-          # Use {pip} as recommended by cibuildwheel docs
-          # You might need to specify a specific PyTorch version compatible
-          # with your fairseq-built version and potential CUDA requirements.
-          # Check fairseq-built's setup.py or requirements.txt for the correct torch version.
-          # Example: CIBW_BEFORE_BUILD_LINUX: '{pip} install torch==2.1.0+cpu torchvision==0.16.0+cpu --index-url https://download.pytorch.org/whl/cpu'
-          # Or for a CUDA version (requires a compatible manylinux image/runner):
-          # CIBW_BEFORE_BUILD_LINUX: '{pip} install torch==2.1.0 torchvision==0.16.0' # Defaults to CUDA usually
-          # --- Assuming a CPU build for simplicity here ---
-          CIBW_BEFORE_BUILD_LINUX: '{pip} install torch --index-url https://download.pytorch.org/whl/cpu'
+
+          # Install PyTorch (CPU) before build for auditwheel analysis.
+          # Adding verbosity and check for libc10.so. Adjust torch version if needed.
+          CIBW_BEFORE_BUILD_LINUX: >-
+            {pip} install --verbose torch --index-url https://download.pytorch.org/whl/cpu &&
+            echo "--- Installed torch. Locating libc10.so: ---" &&
+            find $({python} -c "import site; print(site.getsitepackages()[0])") -name "libc10.so" &&
+            echo "--- libc10.so search complete ---"
+
+          # Optional: Force a specific manylinux image (e.g., if the default is too old/new)
+          # CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
       - name: Upload wheels as artifact
         uses: actions/upload-artifact@v4
