@@ -1,10 +1,10 @@
-name: Build fairseq-built Linux manylinux Wheels (Python 3.12)
+name: Build fairseq-built Linux manylinux Wheels (Python 3.11)
 
 on: workflow_dispatch
 
 jobs:
   build_linux_wheels:
-    name: Build Linux manylinux wheels (cp312)
+    name: Build Linux manylinux wheels (cp311)
     runs-on: ubuntu-latest
 
     steps:
@@ -26,12 +26,21 @@ jobs:
         run: cibuildwheel --platform linux .
         env:
           CIBW_BUILD: cp312-manylinux_x86_64
-          # Optional: Add CIBW_BEFORE_BUILD_LINUX if needed
-          # CIBW_BEFORE_BUILD_LINUX: yum install -y some-devel-package
+          # Install PyTorch BEFORE the build starts inside the container
+          # This makes libtorch.so available for auditwheel's analysis
+          # Use {pip} as recommended by cibuildwheel docs
+          # You might need to specify a specific PyTorch version compatible
+          # with your fairseq-built version and potential CUDA requirements.
+          # Check fairseq-built's setup.py or requirements.txt for the correct torch version.
+          # Example: CIBW_BEFORE_BUILD_LINUX: '{pip} install torch==2.1.0+cpu torchvision==0.16.0+cpu --index-url https://download.pytorch.org/whl/cpu'
+          # Or for a CUDA version (requires a compatible manylinux image/runner):
+          # CIBW_BEFORE_BUILD_LINUX: '{pip} install torch==2.1.0 torchvision==0.16.0' # Defaults to CUDA usually
+          # --- Assuming a CPU build for simplicity here ---
+          CIBW_BEFORE_BUILD_LINUX: '{pip} install torch --index-url https://download.pytorch.org/whl/cpu'
 
       - name: Upload wheels as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Linux-manylinux-wheels-cp312
-          path: ./wheelhouse/fairseq_built*cp312*manylinux*.whl
+          name: Linux-manylinux-wheels-cp311
+          path: ./wheelhouse/fairseq_built*cp311*manylinux*.whl
           if-no-files-found: error
