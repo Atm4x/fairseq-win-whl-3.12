@@ -1,0 +1,72 @@
+name: Build all (Win+Linux, Py 3.10–3.12)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'fairseq-built git ref (branch/tag/sha)'
+        required: false
+        default: main
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }} | Py ${{ matrix.py }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        py: ['3.10', '3.11', '3.12']
+
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.py }}
+
+      - name: Upgrade pip + toolchain
+        run: |
+          python -m pip install -U pip setuptools wheel
+          python -m pip install ninja cmake
+
+      # Если для сборки на Linux требуется torch (как у вас было в 3.11-linux)
+      - name: Install torch (Linux only)
+        if: runner.os == 'Linux'
+        run: |
+          python -m pip install --verbose torch --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Build wheel
+        run: |
+          python -m pip wheel "fairseq-built @ git+https://github.com/Atm4x/fairseq-built.git@${{ github.event.inputs.ref || 'main' }}"
+        continue-on-error: true
+
+      - name: Upload wheel (per-job)
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}-py${{ matrix.py }}
+          path: fairseq_built-*.whl
+          if-no-files-found: error
+
+  collect:
+    name: Collect all wheels into single artifact
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all per-job artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          merge-multiple: true
+
+      # Опционально — собрать все колёса в zip, чтобы скачивать один файл
+      - name: Zip wheels
+        run: |
+          ls -la
+          zip -9r fairseq-built-wheels.zip ./*.whl
+
+      - name: Upload combined artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fairseq-built-wheels-all
+          path: fairseq-built-wheels.zip
+          if-no-files-found: error
